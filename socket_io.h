@@ -138,6 +138,27 @@ namespace hzd {
             already = send_base(data.c_str());
             return already;
         }
+        bool send_with_header(std::string&& data)
+        {
+            if(already)
+            {
+                write_total_bytes = data.size()+1;
+                write_cursor = 0;
+                if(write_total_bytes <= 1)
+                {
+                    LOG(Conn_Send,"send data = null");
+                    return false;
+                }
+                header h{write_total_bytes};
+                if(::send(socket_fd,&h,HEADER_SIZE,0) <= 0)
+                {
+                    LOG(Conn_Send,"header send error");
+                    return false;
+                }
+            }
+            already = send_base(data.c_str());
+            return already;
+        }
         /**
           * @brief send data by given length of data
           * @note None
@@ -153,6 +174,21 @@ namespace hzd {
                 write_cursor = 0;
                 if(write_total_bytes <= 0)
                 {
+                    return false;
+                }
+            }
+            already = send_base(data.c_str());
+            return already;
+        }
+        bool send(std::string&& data,size_t size)
+        {
+            if(already)
+            {
+                write_total_bytes = size;
+                write_cursor = 0;
+                if(write_total_bytes <= 0)
+                {
+                    LOG(Conn_Send,"send data = null");
                     return false;
                 }
             }
